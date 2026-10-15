@@ -1,0 +1,43 @@
+flowchart TB
+    subgraph CLIENT["Client Tier (Browser)"]
+        UI["React 18 SPA (Vite + Tailwind CSS)"]
+        ROUTER["React Router DOM (Route Guards)"]
+        CHARTS["Recharts (Views & Rating Analytics)"]
+        API_CLIENT["api.js (Fetch Client + Credentials)"]
+        UI --- ROUTER
+        UI --- CHARTS
+        UI --- API_CLIENT
+    end
+
+    API_CLIENT -->|"HTTP REST / JSON\nhttpOnly JWT Cookie"| FILTERS
+
+    subgraph TOMCAT["Application Server (Apache Tomcat 10)"]
+        subgraph WEB["Jakarta Servlet & Filter Tier"]
+            FILTERS["Filters:\n• CorsFilter (localhost:5173)\n• AuthFilter (JWT Verify)\n• RoleFilter (RBAC)\n• MaintenanceFilter"]
+            SERVLETS["Servlets under /api/*:\n• AuthServlet\n• UserServlet\n• RecipeServlet\n• ReviewServlet\n• MessageServlet\n• CollectionServlet\n• SettingsServlet\n• StatsServlet\n• HistoryServlet"]
+            FILTERS --> SERVLETS
+        end
+
+        subgraph SERVICE["Service & Business Logic Tier"]
+            SERVICES["Services:\n• RecipeService\n• UserService\n• ReviewService\n• MessageService\n• CollectionService"]
+            MODELS["Polymorphic Models:\n• abstract User (Admin, Contributor, Explorer)\n• Recipe, Review, Message, Collection"]
+            MULTITHREAD["Multithreading:\n• ViewCountService (ExecutorService)\n• Synchronized View Counter"]
+            SERVLETS --> SERVICES
+            SERVICES --- MODELS
+            SERVICES -.->|"Async View Updates"| MULTITHREAD
+        end
+
+        subgraph DAO["Data Access Tier (JDBC)"]
+            DAOS["Generic BaseDAO & DAOs:\n• UserDAO\n• RecipeDAO\n• ReviewDAO\n• MessageDAO\n• CollectionDAO\n• SettingsDAO\n• ViewHistoryDAO"]
+            HIKARI["HikariCP Connection Pool\n(DBConnection Singleton)"]
+            SERVICES --> DAOS
+            MULTITHREAD --> DAOS
+            DAOS --> HIKARI
+        end
+    end
+
+    subgraph DATABASE["Database Tier (MySQL 8.0)"]
+        MYSQL[("MySQL 8.0 Server\n'platter' Schema (11 Tables)\n• users\n• recipes\n• reviews\n• messages\n• collections\n• settings")]
+    end
+
+    HIKARI -->|"JDBC TCP Connection (Port 3307)\nPreparedStatements (No ORM)"| MYSQL

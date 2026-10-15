@@ -1,0 +1,111 @@
+================================================================================
+PLATTER ONLINE RECIPE SHARING PLATFORM — PROJECT STRUCTURE
+================================================================================
+
+platter/
+│
+├── docs/                                  Documentation and Review 1 submission assets
+│   ├── project-structure.txt              Project tree and Java package purpose breakdown
+│   ├── er-diagram.mmd                     Mermaid ER schema definition for all 11 tables
+│   ├── er-diagram.png                     High-resolution rendered entity-relationship diagram
+│   ├── architecture.mmd                   Mermaid system architecture diagram
+│   ├── architecture.png                   High-resolution system architecture diagram
+│   ├── tables.md                          Database table schemas, datatypes, and constraints
+│   └── screenshots/                       Desktop (1280px) and Mobile (390px) responsive screenshots
+│
+├── client/                                React 18 single-page application (Vite + Tailwind CSS)
+│   ├── index.html                         HTML entry shell with Google fonts
+│   ├── package.json                       Frontend npm dependencies and build scripts
+│   ├── vite.config.js                     Vite dev server config with proxy to Tomcat (port 8080)
+│   ├── tailwind.config.js                 Tailwind theme styling and custom color tokens
+│   ├── postcss.config.js                  PostCSS pipeline configuration
+│   └── src/                               React application source code
+│       ├── main.jsx                       React 18 root DOM hydration entry point
+│       ├── App.jsx                        Route tree with ProtectedRoute authorization guards
+│       ├── index.css                      Tailwind directives, fonts, and global animations
+│       ├── components/                    Reusable UI components (Navbar, Footer, RecipeCard, StarRating, CollectionModal, MaintenanceNotice)
+│       ├── context/                       React context providers (AuthContext for auth/settings, ToastContext for notifications)
+│       ├── pages/                         Page views (Home, RecipeDetail, Login, Register, AdminDashboard, ContributorDashboard, ExplorerDashboard)
+│       └── services/
+│           └── api.js                     Centralized Fetch API client communicating with backend servlets
+│
+└── server/                                Java 17 Jakarta EE backend (Apache Tomcat 10 WAR package)
+    ├── pom.xml                            Maven project descriptor (Jakarta Servlet 6.0, MySQL Connector, HikariCP, Jackson, JJWT, jBCrypt)
+    ├── schema.sql                         MySQL database schema DDL (11 tables with PKs, FKs, and indexes)
+    ├── seed.sql                           Database seed script (demo accounts, 10 recipes, reviews, collections, messages)
+    ├── db.properties.example              Configuration template for JDBC credentials and JWT secrets
+    │
+    ├── src/main/resources/                Classpath configuration and bundled SQL resources
+    │   ├── db.properties                  Active JDBC connection settings and JWT parameters (gitignored)
+    │   ├── schema.sql                     Bundled DDL schema script
+    │   └── seed.sql                       Bundled demo data insertion script
+    │
+    ├── src/main/webapp/                   Web application directory for WAR assembly
+    │   ├── uploads/                       Local storage directory for user-uploaded recipe photos
+    │   └── WEB-INF/
+    │       └── web.xml                    Jakarta EE 6.0 deployment descriptor (filters and servlet mappings)
+    │
+    └── src/main/java/com/platter/         Root Java application namespace
+        │
+        ├── model/                         [PACKAGE PURPOSE]: Domain models, POJOs with encapsulation, and inheritance (abstract User with Admin, Contributor, Explorer subclasses)
+        │   ├── User.java                  Abstract base user defining common properties and polymorphic permission hooks
+        │   ├── AdminUser.java             Concrete administrator subclass (canApproveRecipes = true)
+        │   ├── ContributorUser.java       Concrete recipe contributor subclass (canCreateRecipes = true)
+        │   ├── ExplorerUser.java          Concrete recipe explorer subclass (canReviewRecipes = true)
+        │   ├── Recipe.java                Recipe entity with author summary, ingredients, and instructions
+        │   ├── Review.java                Review entity with rating (1-5), comment, and user/recipe summaries
+        │   ├── Message.java               Direct interaction message entity with sender, recipient, and recipe link
+        │   ├── Collection.java            Named recipe collection entity with member recipes
+        │   ├── Settings.java              Platform configuration entity (approvals, reviews, max ingredients, maintenance)
+        │   └── ViewHistoryItem.java       Browsing history entry tracking recipe views by timestamp
+        │
+        ├── dao/                           [PACKAGE PURPOSE]: Data Access Objects executing raw JDBC PreparedStatements and transactions with HikariCP connection pooling
+        │   ├── BaseDAO.java               Generic contract interface defining standard CRUD operations (BaseDAO<T>)
+        │   ├── UserDAO.java               User account persistence, email lookups, profile updates, and recipe favorites
+        │   ├── RecipeDAO.java             Recipe queries, multi-criteria search/filtering, batch ingredient/instruction persistence, and metrics
+        │   ├── ReviewDAO.java             Recipe review CRUD and database-level average rating recalculation
+        │   ├── MessageDAO.java            Direct message retrieval, message persistence, and read receipt updates
+        │   ├── CollectionDAO.java         Collection lifecycle management and collection_items relational mapping
+        │   ├── SettingsDAO.java           Platform configuration singleton retrieval and admin updates
+        │   └── ViewHistoryDAO.java        Browsing history record upserts and user history clearing
+        │
+        ├── service/                       [PACKAGE PURPOSE]: Business logic, permission enforcement, collection data structures (List, Map, Set), and multithreaded view tracking
+        │   ├── Notifiable.java            Interface defining notification delivery contracts for user events
+        │   ├── RecipeService.java         Recipe publishing, admin approval flow, validation, Recharts analytics, and notification dispatch
+        │   ├── UserService.java           Authentication, registration, profile editing, and admin user CRUD
+        │   ├── ReviewService.java         Review submission rules (one review per user per recipe, 1-5 rating limit, settings check)
+        │   ├── MessageService.java        Direct user messaging validation, dispatch, and read state transitions
+        │   ├── CollectionService.java     Personal recipe collection creation, recipe adding/removing, and ownership checks
+        │   └── ViewCountService.java      Multithreaded service with an ExecutorService thread pool and synchronized counter for async view increments
+        │
+        ├── servlet/                       [PACKAGE PURPOSE]: Jakarta HTTP Servlets exposing RESTful endpoints under /api/* returning serialized JSON responses
+        │   ├── BaseServlet.java           Abstract servlet handling payload parsing, authenticated user context, and centralized error translation
+        │   ├── AuthServlet.java           Endpoints /api/auth/* (register, login, logout, me) with httpOnly JWT cookies
+        │   ├── UserServlet.java           Endpoints /api/users/* (user management, profile updates, favorites)
+        │   ├── RecipeServlet.java         Endpoints /api/recipes/* (browse, my recipes, multipart photo upload, approval)
+        │   ├── ReviewServlet.java         Endpoints /api/reviews/* (recipe reviews, user reviews, admin moderation)
+        │   ├── MessageServlet.java        Endpoints /api/messages/* (direct messaging and read receipts)
+        │   ├── CollectionServlet.java     Endpoints /api/collections/* (named collections and recipe bookmarking)
+        │   ├── SettingsServlet.java       Endpoints /api/settings/* (system settings retrieval and admin modification)
+        │   ├── StatsServlet.java          Endpoints /api/stats/* (contributor Recharts metrics and admin platform statistics)
+        │   ├── HistoryServlet.java        Endpoints /api/history/* (user browsing history retrieval and deletion)
+        │   └── AppContextListener.java    ServletContextListener for deterministic background thread pool and database pool shutdown
+        │
+        ├── filter/                        [PACKAGE PURPOSE]: Servlet Filters intercepting requests for CORS, JWT authentication, RBAC authorization, and maintenance gating
+        │   ├── CorsFilter.java            Configures CORS headers and pre-flight OPTIONS response for localhost:5173
+        │   ├── AuthFilter.java            Extracts and verifies JWT tokens from httpOnly cookies/headers and attaches currentUser
+        │   ├── RoleFilter.java            Enforces Role-Based Access Control (Admin, Contributor, Explorer) on protected API routes
+        │   └── MaintenanceFilter.java     Guards application endpoints when maintenance mode is active, permitting only administrators
+        │
+        ├── exception/                     [PACKAGE PURPOSE]: Custom unchecked exception hierarchy translated into appropriate HTTP status codes (400, 401, 403, 404, 500)
+        │   ├── PlatterException.java      Root application runtime exception encapsulating HTTP status codes
+        │   ├── ValidationException.java   HTTP 400 Bad Request exception for payload and business constraint violations
+        │   ├── UnauthorizedException.java HTTP 401 Unauthorized exception for missing or invalid authentication
+        │   ├── ForbiddenException.java    HTTP 403 Forbidden exception for role and permission denial
+        │   └── NotFoundException.java     HTTP 404 Not Found exception for non-existent entities
+        │
+        └── util/                          [PACKAGE PURPOSE]: Singleton managers and utility classes for connection pooling, BCrypt hashing, Jackson JSON, and JWT tokens
+            ├── DBConnection.java          Thread-safe Singleton managing the HikariCP connection pool with db.properties
+            ├── PasswordUtil.java          BCrypt salted password hashing and verification routines
+            ├── JsonUtil.java              Jackson ObjectMapper wrapper with helper methods for JSON and error response delivery
+            └── JwtUtil.java               JJWT HMAC-SHA token generator, parser, and HTTP cookie extractor

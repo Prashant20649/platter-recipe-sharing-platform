@@ -1,0 +1,123 @@
+erDiagram
+    USERS ||--o{ RECIPES : "authors"
+    USERS ||--o{ REVIEWS : "writes"
+    USERS ||--o{ MESSAGES : "sends"
+    USERS ||--o{ MESSAGES : "receives"
+    USERS ||--o{ COLLECTIONS : "curates"
+    USERS ||--o{ VIEW_HISTORY : "browses"
+    USERS ||--o{ USER_FAVORITES : "favorites"
+
+    RECIPES ||--|{ RECIPE_INGREDIENTS : "contains"
+    RECIPES ||--|{ RECIPE_INSTRUCTIONS : "directs"
+    RECIPES ||--o{ REVIEWS : "evaluated_by"
+    RECIPES ||--o{ MESSAGES : "referenced_in"
+    RECIPES ||--o{ COLLECTION_ITEMS : "included_in"
+    RECIPES ||--o{ VIEW_HISTORY : "logged_in"
+    RECIPES ||--o{ USER_FAVORITES : "saved_as"
+
+    COLLECTIONS ||--o{ COLLECTION_ITEMS : "contains"
+
+    USERS {
+        BIGINT id PK
+        VARCHAR name
+        VARCHAR email UK
+        VARCHAR password
+        ENUM role
+        TEXT bio
+        VARCHAR avatar
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+
+    SETTINGS {
+        BIGINT id PK
+        VARCHAR site_name
+        BOOLEAN require_approval
+        BOOLEAN allow_reviews
+        INT max_ingredients
+        BOOLEAN maintenance_mode
+        TIMESTAMP updated_at
+    }
+
+    RECIPES {
+        BIGINT id PK
+        VARCHAR title
+        TEXT description
+        VARCHAR cuisine
+        VARCHAR diet
+        INT prep_time
+        INT cook_time
+        INT total_time
+        INT servings
+        VARCHAR photo_url
+        BIGINT author_id FK
+        ENUM status
+        DECIMAL average_rating
+        INT review_count
+        INT view_count
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+
+    RECIPE_INGREDIENTS {
+        BIGINT id PK
+        BIGINT recipe_id FK
+        VARCHAR ingredient
+        INT item_order
+    }
+
+    RECIPE_INSTRUCTIONS {
+        BIGINT id PK
+        BIGINT recipe_id FK
+        TEXT step_instruction
+        INT step_number
+    }
+
+    REVIEWS {
+        BIGINT id PK
+        BIGINT user_id FK
+        BIGINT recipe_id FK
+        INT rating
+        TEXT comment
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+
+    MESSAGES {
+        BIGINT id PK
+        BIGINT sender_id FK
+        BIGINT recipient_id FK
+        BIGINT recipe_id FK
+        TEXT content
+        BOOLEAN is_read
+        TIMESTAMP created_at
+    }
+
+    COLLECTIONS {
+        BIGINT id PK
+        BIGINT user_id FK
+        VARCHAR name
+        TEXT description
+        TIMESTAMP created_at
+        TIMESTAMP updated_at
+    }
+
+    COLLECTION_ITEMS {
+        BIGINT id PK
+        BIGINT collection_id FK
+        BIGINT recipe_id FK
+        TIMESTAMP added_at
+    }
+
+    VIEW_HISTORY {
+        BIGINT id PK
+        BIGINT user_id FK
+        BIGINT recipe_id FK
+        TIMESTAMP viewed_at
+    }
+
+    USER_FAVORITES {
+        BIGINT user_id PK_FK
+        BIGINT recipe_id PK_FK
+        TIMESTAMP created_at
+    }

@@ -1,0 +1,13 @@
+# Platter Database & Authentication Properties Example
+db.url=jdbc:mysql://127.0.0.1:3307/platter?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC&createDatabaseIfNotExist=true
+db.username=root
+db.password=root
+db.driver=com.mysql.cj.jdbc.Driver
+db.pool.maxSize=15
+db.pool.minIdle=3
+db.pool.idleTimeout=300000
+db.pool.connectionTimeout=20000
+
+# JWT Configuration (minimum 256 bits for HMAC-SHA algorithms)
+jwt.secret=platter_super_secret_jwt_key_2026_java_jakarta_ee_secure_token_512
+jwt.expirationMs=604800000
